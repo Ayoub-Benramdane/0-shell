@@ -1,19 +1,25 @@
 use crate::commands::ls::create_path;
-use crate::zero::*;
+use crate::shell_core::BuiltinCommand;
+use crate::shell_core::{parse_flags, validate_flags};
 use std::fs;
 use std::io;
 
-pub fn exec_rm(
-    cmd: Commands,
+pub fn run_rm(
+    cmd: BuiltinCommand,
     args: &mut Vec<String>,
-    mp: &mut std::collections::HashMap<Commands, String>
+    flag_map: &mut std::collections::HashMap<BuiltinCommand, String>,
 ) -> io::Result<()> {
-    detect_flags(cmd.clone(), args, mp);
-    if valid_flags(cmd.clone(), mp) == false {
+    parse_flags(cmd.clone(), args, flag_map);
+    if validate_flags(cmd.clone(), flag_map) == false {
         return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid flags"));
     }
 
     for i in args {
+
+        // if i == "." || i == ".." {
+        //     println!("rm: refusing to remove '.' or '..' directory: skipping '..'");
+        //     continue;
+        // }
 
         let path = create_path(String::from(".") ,i.clone());
 
@@ -25,7 +31,8 @@ pub fn exec_rm(
         let metadata = path.symlink_metadata()?;
 
         if metadata.is_dir() {
-            if mp.contains_key(&cmd) && mp.get(&cmd) == Some(&"r".to_string()) {
+            // println!("{:?}  ++++++   {:?}", metadata.file_type(), mp);
+            if flag_map.contains_key(&cmd) && flag_map.get(&cmd) == Some(&"r".to_string()) {
                 fs::remove_dir_all(path)?;
             } else {
                 println!("rm: cannot remove '{}': Is a directory", i);

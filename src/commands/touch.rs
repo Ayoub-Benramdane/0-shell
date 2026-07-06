@@ -1,18 +1,18 @@
-use crate::zero::{detect_flags, valid_flags};
+use crate::shell_core::{parse_flags, validate_flags, BuiltinCommand};
 use std::fs::* ;
 
-pub fn exec_touch(
-    _cmd: crate::zero::Commands,
+pub fn run_touch(
+    cmd: BuiltinCommand,
     args: &mut Vec<String>,
-    _mp: &mut std::collections::HashMap<crate::zero::Commands, String>
+    flag_map: &mut std::collections::HashMap<BuiltinCommand, String>,
 ) {
     if args.is_empty() {
         println!("touch: missing file operand");
         return;
     }
 
-    detect_flags(_cmd.clone(), args, _mp);
-    if !valid_flags(_cmd, _mp) {
+    parse_flags(cmd.clone(), args, flag_map);
+    if !validate_flags(cmd, flag_map) {
         return;
     }
 
