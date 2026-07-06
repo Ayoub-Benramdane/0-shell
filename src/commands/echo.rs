@@ -1,12 +1,18 @@
-use crate::zero::Commands;
+use crate::shell_core::BuiltinCommand;
 
-pub fn exec_echo(
-    _cmd: Commands,
+pub fn run_echo(
+    _cmd: BuiltinCommand,
     args: &mut Vec<String>,
-    _mp: &mut std::collections::HashMap<Commands, String>
+    _flag_map: &mut std::collections::HashMap<BuiltinCommand, String>,
 ) {
-    let processed_args: Vec<String> = args
-        .iter()
+  
+
+    // detect_flags(Commands::Echo, args, _mp);
+    // if !valid_flags(Commands::Echo, _mp) {
+    //     return;
+    // }
+
+    let processed_args: Vec<String> = args.iter()
         .map(|arg| process_escape_sequences(arg))
         .collect();
 
@@ -18,13 +24,14 @@ fn process_escape_sequences(input: &str) -> String {
     let mut result = String::new();
     let mut chars = input.chars().peekable();
     let mut escaped = false;
-
+    
     while let Some(c) = chars.next() {
         if escaped {
             match c {
                 'n' => result.push('\n'),
                 't' => result.push('\t'),
                 'r' => result.push('\r'),
+                // 'f' => result.push('\f'),
                 '\\' => result.push('\\'),
                 _ => {
                     result.push('\\');
@@ -38,10 +45,10 @@ fn process_escape_sequences(input: &str) -> String {
             result.push(c);
         }
     }
-
+    
     if escaped {
         result.push('\\');
     }
-
+    
     result
 }

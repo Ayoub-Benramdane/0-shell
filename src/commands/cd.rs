@@ -1,12 +1,12 @@
 use crate::commands::ls::create_path;
-use crate::zero::Commands;
+use crate::shell_core::BuiltinCommand;
 use std::{env::*};
 use std::path::*;
 
-pub fn exec_cd(
-    _cmd: Commands,
+pub fn run_cd(
+    _cmd: BuiltinCommand,
     args: &mut Vec<String>,
-    mp: &mut std::collections::HashMap<Commands, String>
+    flag_map: &mut std::collections::HashMap<BuiltinCommand, String>,
 ) {
     let user = whoami::username();
 
@@ -26,7 +26,7 @@ pub fn exec_cd(
     let target_path = args[0].replace("~", &format!("/home/{}", user));
 
     if target_path == "-" {
-        match mp.get(&Commands::Cd).cloned() {
+        match flag_map.get(&BuiltinCommand::Cd).cloned() {
             Some(old_path) => {
                 if !Path::new(&old_path).exists() {
                     println!(
@@ -35,19 +35,19 @@ pub fn exec_cd(
                     );
                     return;
                 }
-                let current_before = mp.get(&Commands::Pwd).cloned().or_else(|| get_current_dir());
+                let current_before = flag_map.get(&BuiltinCommand::Pwd).cloned().or_else(|| get_current_dir());
                 println!("{}", old_path.replace(&format!("/home/{}", user), "~"));
                 if let Err(e) = set_current_dir(&old_path) {
                     println!("cd: {}: {}", old_path.replace(&format!("/home/{}", user), "~"), e);
                 } else if let Some(prev) = current_before {
-                    mp.insert(Commands::Cd, prev);
-                    mp.insert(Commands::Pwd, old_path);
+                    flag_map.insert(BuiltinCommand::Cd, prev);
+                    flag_map.insert(BuiltinCommand::Pwd, old_path);
                 }
             }
             None => {
                 let current = get_current_dir().unwrap_or_else(|| format!("/home/{}", user));
-                mp.insert(Commands::Cd, current);
-                mp.insert(Commands::Pwd, format!("/home/{}", user));
+                flag_map.insert(BuiltinCommand::Cd, current);
+                flag_map.insert(BuiltinCommand::Pwd, format!("/home/{}", user));
                 let _ = set_current_dir(&format!("/home/{}", user));
             }
         }
@@ -67,34 +67,36 @@ pub fn exec_cd(
         return;
     }
 
-    if !mp.contains_key(&Commands::Pwd) {
-        mp.insert(Commands::Pwd, get_current_dir().unwrap_or_else(|| format!("/home/{}", user)));
+    if !flag_map.contains_key(&BuiltinCommand::Pwd) {
+        flag_map.insert(BuiltinCommand::Pwd, get_current_dir().unwrap_or_else(|| format!("/home/{}", user)));
     }
 
-    let current_before = mp.get(&Commands::Pwd).cloned();
+    let current_before = flag_map.get(&BuiltinCommand::Pwd).cloned();
     if let Err(e) = set_current_dir(&target_path) {
         println!("cd: {}: {}", target_path.replace(&format!("/home/{}", user), "~"), e);
         return;
     } else if let Some(prev) = current_before {
-        mp.insert(Commands::Cd, prev);
+        flag_map.insert(BuiltinCommand::Cd, prev);
     }
 
     let pwd_path = if Path::new(&target_path).is_absolute() {
         target_path.clone()
     } else {
-        let current = mp.get(&Commands::Pwd).cloned().unwrap_or_else(|| "/".to_string());
+        let current = flag_map.get(&BuiltinCommand::Pwd).cloned().unwrap_or_else(|| "/".to_string());
         create_path(current, target_path.clone()).to_string_lossy().to_string()
     };
 
+    let _current_pwd = flag_map.get(&BuiltinCommand::Pwd).cloned().unwrap_or_else(|| "/".to_string());
+
     let Ok(metadata) = Path::new(&pwd_path).symlink_metadata() else {
-        mp.insert(Commands::Pwd, get_current_dir().unwrap_or_else(|| "Unknown".to_string()));
+        flag_map.insert(BuiltinCommand::Pwd, get_current_dir().unwrap_or_else(|| "Unknown".to_string()));
         return;
     };
 
     if metadata.file_type().is_symlink() {
-        mp.insert(Commands::Pwd, pwd_path);
+        flag_map.insert(BuiltinCommand::Pwd, pwd_path);
     } else {
-        mp.insert(Commands::Pwd, get_current_dir().unwrap_or_else(|| "Unknown".to_string()));
+        flag_map.insert(BuiltinCommand::Pwd, get_current_dir().unwrap_or_else(|| "Unknown".to_string()));
     }
 }
 
