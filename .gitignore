@@ -1,1 +1,15 @@
+# Rust / Cargo
+/target/
+**/target/
+# Ignore build artifacts
+Cargo.lock
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
 /target
