@@ -2,10 +2,10 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    Command(String),
-    Flag(String),
-    Argument(String),
-    Semicolon,
+    Command(String),  
+    Flag(String),    
+    Argument(String), 
+    Semicolon,        
 }
 
 #[derive(Debug)]
@@ -41,7 +41,7 @@ impl Lexer {
     }
 
     fn advance(&mut self) {
-        if self.position < self.input.len() {
+        if self.position < self.input.chars().count() {
             self.current_char = Some(self.input.chars().nth(self.position).unwrap());
             self.position += 1;
         } else {
@@ -54,6 +54,7 @@ impl Lexer {
         let mut is_start_of_command = true;
 
         while self.current_char.is_some() {
+            // Skip whitespace
             if self.current_char.unwrap().is_whitespace() {
                 self.advance();
                 continue;
@@ -75,7 +76,7 @@ impl Lexer {
             };
 
             is_start_of_command = match &token {
-                Token::Semicolon => true,
+                Token::Semicolon => true, 
                 _ => false,
             };
 
@@ -86,7 +87,6 @@ impl Lexer {
     }
 
     fn classify_word(&self, word: String, is_start_of_command: bool) -> Token {
-        println!("{word}, {is_start_of_command}");
         if is_start_of_command {
             Token::Command(word)
         } else if word.starts_with('-') {
@@ -99,19 +99,21 @@ impl Lexer {
     fn parse_quoted_string(&mut self) -> Result<String> {
         let quote_char = self.current_char.unwrap();
         let quote_start = self.position - 1;
-        self.advance();
+        self.advance(); 
         let mut content = String::new();
         let mut escaped = false;
 
         while let Some(c) = self.current_char {
             if escaped {
                 match c {
+                   
                     '\\' => content.push('\\'),
                     '"' => content.push('"'),
                     '\'' => content.push('\''),
                     '0' => content.push('\0'),
-                    '$' => content.push('$'),
-                    '`' => content.push('`'),
+                    // ' ' => content.push(' '),
+                    '$' => content.push('$'), 
+                    '`' => content.push('`'), 
                     _ => {
                         content.push('\\');
                         content.push(c);
