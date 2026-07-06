@@ -1,17 +1,15 @@
-use crate::zero::Commands;
-use crate::zero::*;
-use crate::commands::rm::exec_rm;
-use crate::commands::cat::exec_cat;
+use crate::shell_core::BuiltinCommand;
+use crate::shell_core::{parse_flags, validate_flags};
+use crate::commands::rm::run_rm;
+use crate::commands::cat::run_cat;
 
-
-
-pub fn exec_history(
-    cmd: Commands,
+pub fn run_history(
+    cmd: BuiltinCommand,
     args: &mut Vec<String>,
-    mp: &mut std::collections::HashMap<Commands, String>
+    flag_map: &mut std::collections::HashMap<BuiltinCommand, String>,
 ) {
-    detect_flags(cmd.clone(), args, mp);
-    if !valid_flags(cmd.clone(), mp) {
+    parse_flags(cmd.clone(), args, flag_map);
+    if !validate_flags(cmd.clone(), flag_map) {
         return;
     }
     if args.len() > 0 {
@@ -20,12 +18,12 @@ pub fn exec_history(
     }
     let user = whoami::username();
     let his_path = format!("/home/{}/.zero-history.txt", user) ;
-    if mp.contains_key(&cmd) && mp.get(&cmd) == Some(&"c".to_string()) {
-        let _ = exec_rm(cmd.clone(), &mut vec![his_path.to_string()], mp);
-        mp.remove(&cmd);
+    if flag_map.contains_key(&cmd) && flag_map.get(&cmd) == Some(&"c".to_string()) {
+        let _ = run_rm(cmd.clone(), &mut vec![his_path.to_string()], flag_map);
+        flag_map.remove(&cmd);
     } else {
-        let mut catt = 1;
-        let _ = exec_cat(&mut catt, Commands::Cat, &mut vec![his_path.to_string(), "-n".to_string()], mp);
+        let mut cat_count = 1;
+        let _ = run_cat(&mut cat_count, BuiltinCommand::Cat, &mut vec![his_path.to_string(), "-n".to_string()], flag_map);
     }
     
 }

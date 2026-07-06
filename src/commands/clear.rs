@@ -1,13 +1,13 @@
-use crate::zero::*;
-use crate::zero::Commands;
+use crate::shell_core::BuiltinCommand;
+use crate::shell_core::{parse_flags, validate_flags};
 
-pub fn exec_clear(
-    _cmd: Commands,
+pub fn run_clear(
+    _cmd: BuiltinCommand,
     args: &mut Vec<String>,
-    _mp: &mut std::collections::HashMap<Commands, String>
+    _flag_map: &mut std::collections::HashMap<BuiltinCommand, String>,
 ) {
-    detect_flags(Commands::Clear, args, _mp);
-    if !valid_flags(Commands::Clear, _mp) {
+    parse_flags(BuiltinCommand::Clear, args, _flag_map);
+    if !validate_flags(BuiltinCommand::Clear, _flag_map) {
         return;
     }
     clearscreen::clear().expect("Failed to clear terminal");

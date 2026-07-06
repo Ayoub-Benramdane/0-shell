@@ -1,4 +1,6 @@
-pub fn exec_exit(
+// use crate::zero::clear_terminal;
+
+pub fn run_exit(
     args: &mut Vec<String>,
 ) {
     println!("exit");
@@ -11,5 +13,6 @@ pub fn exec_exit(
             }
         }
     }
+    // clear_terminal();
     std::process::exit(0);
 }
